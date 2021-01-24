@@ -10,6 +10,8 @@
 
 namespace Phalcon\Annotations;
 
+use Phalcon\Di\Exception;
+
 /**
  * Represents a single annotation in an annotations collection
  */
@@ -20,66 +22,66 @@ class Annotation
      *
      * @var array
      */
-    protected arguments = [];
+    protected $arguments = [];
 
     /**
      * Annotation ExprArguments
      *
      * @var array
      */
-    protected exprArguments = [];
+    protected $exprArguments = [];
 
     /**
      * Annotation Name
      *
      * @var string|null
      */
-    protected name;
+    protected $name;
 
     /**
      * Phalcon\Annotations\Annotation constructor
      */
-    public function __construct(array! reflectionData)
+    public function __construct(?array $reflectionData)
     {
-        var name, exprArguments, argument, resolvedArgument;
-        array arguments;
+        $exprArguments = null;
 
-        if fetch name, reflectionData["name"] {
-            let this->name = reflectionData["name"];
+        if (true === isset($reflectionData['name'])) {
+            $this->name = $reflectionData['name'];
         }
 
         /**
          * Process annotation arguments
          */
-        if fetch exprArguments, reflectionData["arguments"] {
-            let arguments = [];
+        if (true === isset($reflectionData['arguments'])) {
+            $exprArguments = $reflectionData['arguments'];
+            $arguments     = [];
 
-            for argument in exprArguments {
-                let resolvedArgument =  this->getExpression(
-                    argument["expr"]
+            foreach ($exprArguments as $argument) {
+                $resolvedArgument = $this->getExpression(
+                    $argument["expr"]
                 );
 
-                if fetch name, argument["name"] {
-                    let arguments[name] = resolvedArgument;
+                if (true === isset($argument['name'])) {
+                    $arguments[$argument['name']] = $resolvedArgument;
                 } else {
-                    let arguments[] = resolvedArgument;
+                    $arguments[] = $resolvedArgument;
                 }
             }
 
-            let this->arguments = arguments;
-            let this->exprArguments = exprArguments;
+            $this->arguments     = $arguments;
+            $this->exprArguments = $exprArguments;
         }
     }
 
     /**
      * Returns an argument in a specific position
      */
-    public function getArgument(var position) -> var | null
+    public function getArgument($position)
     {
-        var argument;
+        $argument = '';
 
-        if fetch argument, this->arguments[position] {
-            return argument;
+        if (true === isset($this->arguments[$position])) {
+            return $argument;
         }
 
         return null;
@@ -88,92 +90,95 @@ class Annotation
     /**
      * Returns the expression arguments
      */
-    public function getArguments() -> array
+    public function getArguments(): array
     {
-        return this->arguments;
+        return $this->arguments;
     }
 
     /**
      * Returns the expression arguments without resolving
      */
-    public function getExprArguments() -> array
+    public
+    function getExprArguments(): array
     {
-        return this->exprArguments;
+        return $this->exprArguments;
     }
 
     /**
      * Resolves an annotation expression
      */
-    public function getExpression(array! expr) -> var
+    public
+    function getExpression(?array $expr)
     {
-        var value, item, resolvedItem, arrayValue, name, type;
+//        $value, item, resolvedItem, arrayValue, name, type;
 
-        let type = expr["type"];
+        $type = $expr["type"];
 
-        switch type {
-            case PHANNOT_T_INTEGER:
-            case PHANNOT_T_DOUBLE:
-            case PHANNOT_T_STRING:
-            case PHANNOT_T_IDENTIFIER:
-                let value = expr["value"];
+        switch ($type) {
+            case "INTEGER":
+            case  "DOUBLE":
+            case "STRING":
+            case "IDENTIFIER":
+                $value = $expr["value"];
                 break;
 
-            case PHANNOT_T_NULL:
-                let value = null;
+            case 304:
+                $value = null;
                 break;
 
-            case PHANNOT_T_FALSE:
-                let value = false;
+            case 305:
+                $value = false;
                 break;
 
-            case PHANNOT_T_TRUE:
-                let value = true;
+            case 306:
+                $value = true;
                 break;
 
-            case PHANNOT_T_ARRAY:
-                let arrayValue = [];
+            case 308:
+                $arrayValue = [];
 
-                for item in expr["items"] {
-                    let resolvedItem = this->getExpression(
-                        item["expr"]
+                foreach ($expr["items"] as $item) {
+                    $resolvedItem = $this->getExpression(
+                        $item["expr"]
                     );
 
-                    if fetch name, item["name"] {
-                        let arrayValue[name] = resolvedItem;
+                    if (true === isset($item['arguments'])) {
+                        $arrayValue[$item["name"]] = $resolvedItem;
                     } else {
-                        let arrayValue[] = resolvedItem;
+                        $arrayValue[] = $resolvedItem;
                     }
                 }
 
-                return arrayValue;
+                return $arrayValue;
 
-            case PHANNOT_T_ANNOTATION:
-                return new Annotation(expr);
+            case 300:
+                return new Annotation($expr);
 
             default:
-                throw new Exception("The expression ". type. " is unknown");
+                throw new Exception(
+                    'The expression ' . $type . ' is unknown'
+                );
         }
 
-        return value;
+        return $value;
     }
 
     /**
      * Returns the annotation's name
      */
-    public function getName() -> null | string
+    public
+    function getName(): ?string
     {
-        return this->name;
+        return $this->name;
     }
 
     /**
      * Returns a named argument
      */
-    public function getNamedArgument(string! name) -> var | null
+    public function getNamedArgument(?string $name)
     {
-        var argument;
-
-        if fetch argument, this->arguments[name] {
-            return argument;
+        if (true === isset($this->arguments[$name])) {
+            return $this->arguments[$name];
         }
 
         return null;
@@ -182,24 +187,25 @@ class Annotation
     /**
      * Returns a named parameter
      */
-    public function getNamedParameter(string! name) -> var
+    public
+    function getNamedParameter(?string $name)
     {
-        return this->getNamedArgument(name);
+        return $this->getNamedArgument($name);
     }
 
     /**
      * Returns an argument in a specific position
      */
-    public function hasArgument(var position) -> bool
+    public function hasArgument($position): bool
     {
-        return isset this->arguments[position];
+        return isset($this->arguments[$position]);
     }
 
     /**
      * Returns the number of arguments that the annotation has
      */
-    public function numberArguments() -> int
+    public function numberArguments(): int
     {
-        return count(this->arguments);
+        return count($this->arguments);
     }
 }
